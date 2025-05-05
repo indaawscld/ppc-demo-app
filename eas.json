@@ -5,8 +5,7 @@
         "buildType": "apk"  // or "app-bundle"
       },
       "ios": {
-        // Remove the workflow field
-        // No need to specify workflow here for iOS
+         "buildType": "adhoc"
       }
     }
   }
