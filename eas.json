@@ -1,12 +1,10 @@
 {
   "build": {
     "android": {
-      "buildType": "apk",
-      "releaseChannel": "default"
+      "workflow": "managed"
     },
     "ios": {
-      "buildType": "archive",
-      "releaseChannel": "default"
+      "workflow": "managed"
     }
   }
 }
