@@ -37,7 +37,7 @@ jobs:
         npx eas build --platform ios --non-interactive
 
     - name: Upload Build Artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: expo-builds
         path: |
