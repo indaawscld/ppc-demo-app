@@ -25,8 +25,8 @@ jobs:
 
       - name: Set Expo Token for authentication
         run: |
-          echo ${{ secrets.EXPO_TOKEN }} > ~/.expo/token
-          cat ~/.expo/token
+          mkdir -p ~/.expo && echo ${{ secrets.EXPO_TOKEN }} > ~/.expo/token
+          cat ~/.expo/token  # Optional: Remove this line after confirming token is correctly set
 
       - name: Build Android app
         run: eas build --platform android --non-interactive
