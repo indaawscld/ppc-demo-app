@@ -27,51 +27,22 @@ jobs:
         run: echo "EXPO_TOKEN=${{ secrets.EXPO_TOKEN }}" >> $GITHUB_ENV
 
       - name: Build Android APK (Non-Prod)
-        id: android_build
-        run: |
-          eas build --platform android --profile preview --non-interactive --json > android-build.json
-          cat android-build.json
+        run: eas build --platform android --profile preview --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
-      - name: Download Android APK
-        run: |
-          APK_URL=$(cat android-build.json | jq -r '.builds.android[0].buildUrl')
-          echo "Downloading from $APK_URL"
-          curl -L -o app.apk "$APK_URL"
+      # iOS build included but will fail if Apple credentials not set
+      - name: Build iOS ADHOC IPA (Non-Prod)
+        run: eas build --platform ios --profile preview --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-
+        continue-on-error: true  # Let the build continue even if iOS fails
 
       - name: Upload Android APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: expo-android-apk
-          path: app.apk
-
-      - name: Build iOS ADHOC IPA (Non-Prod)
-        id: ios_build
-        continue-on-error: true  # <- Prevents failure due to missing Apple credentials
-        run: |
-          eas build --platform ios --profile preview --non-interactive --json > ios-build.json || echo "iOS build failed"
-          cat ios-build.json || echo "No iOS output"
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-
-      - name: Download iOS IPA (if build succeeded)
-        if: ${{ success() && steps.ios_build.outcome == 'success' }}
-        run: |
-          IPA_URL=$(cat ios-build.json | jq -r '.artifacts.buildUrl')
-          curl -o app.ipa "$IPA_URL"
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-
-      - name: Upload iOS IPA Artifact (if exists)
-        if: ${{ success() && steps.ios_build.outcome == 'success' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: expo-ios-ipa
-          path: app.ipa
+          path: android/app/build/outputs/apk/release/app-release.apk
 
   submit:
     runs-on: ubuntu-latest
@@ -90,34 +61,35 @@ jobs:
           name: expo-android-apk
           path: ./android
 
-      - name: Download iOS IPA (if exists)
-        continue-on-error: true
+      - name: List Downloaded APK
+        run: ls -al ./android
+
+      - name: Submit Android APK to Google Play
+        run: eas submit --platform android --path ./android/app-release.apk --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      # iOS IPA download and submission (optional, won't work unless credentials are set)
+      - name: Download iOS IPA
+        if: always()  # Always attempt
         uses: actions/download-artifact@v4
         with:
           name: expo-ios-ipa
           path: ./ios
 
-      - name: List Downloaded Files (Debug)
+      - name: Submit iOS IPA to App Store
+        if: always()
         run: |
-          echo "APK files:"
-          ls -al ./android
-          echo "IPA files:"
-          ls -al ./ios || echo "No iOS IPA found."
-
-      - name: Submit Android APK to Google Play
-        run: eas submit --platform android --path ./android/app.apk --non-interactive
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-
-      - name: Submit iOS IPA to App Store (if available)
-        if: ${{ success() && hashFiles('./ios/app.ipa') != '' }}
-        run: eas submit --platform ios --path ./ios/app.ipa --non-interactive
+          if [ -f "./ios/your-app.ipa" ]; then
+            eas submit --platform ios --path ./ios/your-app.ipa --non-interactive
+          else
+            echo "Skipping iOS submit: IPA not found or iOS build failed."
+          fi
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
   dependabot:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -126,4 +98,4 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            console.log("Dependabot runs automatically via GitHub UI. No manual trigger needed.")
+            console.log("Dependabot runs automatically via GitHub UI.")
