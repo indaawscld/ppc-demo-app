@@ -9,35 +9,46 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout code
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 18
 
+      # Install dependencies
       - name: Install dependencies
         run: npm install
 
+      # Install EAS CLI
       - name: Install EAS CLI
         run: npm install -g eas-cli
 
+      # Set Expo Token for authentication with Expo servers
       - name: Set Expo Token
         run: echo "EXPO_TOKEN=${{ secrets.EXPO_TOKEN }}" >> $GITHUB_ENV
 
-      # Build Android AAB (Production Build)
-      - name: Build Android AAB
+      # Build Android APK (Preview Build) for internal testing (using Preview profile)
+      - name: Build Android APK (Preview)
+        run: eas build --platform android --profile preview --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      # Build Android AAB (Production Build) for Google Play
+      - name: Build Android AAB (Production)
         run: eas build --platform android --profile production --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
-      # Build iOS IPA (Production Build)
-      - name: Build iOS IPA
-        run: eas build --platform ios --profile production --non-interactive
+      # Build iOS IPA (Preview Build) — using the "preview" profile
+      - name: Build iOS IPA (Preview)
+        run: eas build --platform ios --profile preview --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        continue-on-error: true  # Continue even if iOS build fails (because it requires Apple credentials)
+        continue-on-error: true  # Skip if credentials are not available for iOS
 
   submit:
     runs-on: ubuntu-latest
@@ -56,19 +67,16 @@ jobs:
       - name: Install EAS CLI
         run: npm install -g eas-cli
 
-      # Submit Android AAB to Google Play Store
+      # Submit Android AAB to Google Play (no need for --archive argument)
       - name: Submit Android AAB to Google Play
-        run: |
-          # Ensure the build file is present and submit it
-          eas submit --platform android --non-interactive --archive /home/expo/workingdir/build/android/app/build/outputs/bundle/release/app-release.aab
+        run: eas submit --platform android --profile production --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
-      # Submit iOS build to App Store (optional, will work only if Apple credentials are set)
+      # Optional iOS submission — will only work if credentials are set
       - name: Submit iOS IPA to App Store
         if: always()
-        run: |
-          eas submit --platform ios --non-interactive --archive ./dist/my-app.ipa
+        run: eas submit --platform ios --profile production --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 

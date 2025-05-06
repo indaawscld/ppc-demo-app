@@ -5,22 +5,34 @@
   "build": {
     "preview": {
       "android": {
-        "buildType": "apk",            // APK for preview build (internal)
-        "distribution": "internal"     // Internal distribution for preview
+        "buildType": "apk",
+        "distribution": "internal"
       },
       "ios": {
-        "simulator": true,             // Simulator for iOS preview
-        "distribution": "internal"     // Internal distribution for iOS preview
+        "simulator": true,
+        "distribution": "internal"
       }
     },
     "production": {
       "android": {
-        "buildType": "app-bundle",     // App Bundle for production (required for Google Play)
-        "distribution": "store"        // Submit to Google Play Store
+        "buildType": "app-bundle",
+        "distribution": "store"
       },
       "ios": {
-        "distribution": "store",       // Submit to App Store
-        "simulator": false             // Use real devices for production build (not simulator)
+        "simulator": false,
+        "distribution": "store"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "android": {
+        "serviceAccountKeyPath": "./credentials/google-play-service-account.json",
+        "track": "internal"
+      },
+      "ios": {
+        "appleId": "your-apple-id@example.com",  // Optional
+        "ascAppId": "your-app-id-on-app-store-connect" // Optional
       }
     }
   }
