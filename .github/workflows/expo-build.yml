@@ -53,7 +53,6 @@ jobs:
       # Submit Android APK to Google Play
       - name: Submit Android APK to Google Play
         run: |
-          # Expo CLI will automatically upload the latest APK to Google Play
           eas submit --platform android --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
@@ -62,7 +61,6 @@ jobs:
       - name: Submit iOS IPA to App Store
         if: always()  # Always attempt to submit iOS IPA, even if previous steps fail
         run: |
-          # Expo CLI will automatically upload the latest IPA to the App Store
           eas submit --platform ios --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}

@@ -5,15 +5,22 @@
   "build": {
     "preview": {
       "android": {
-        "buildType": "apk"
+        "buildType": "apk",            // APK for preview build (internal)
+        "distribution": "internal"     // Internal distribution for preview
       },
       "ios": {
-        "simulator": true
+        "simulator": true,             // Simulator for iOS preview
+        "distribution": "internal"     // Internal distribution for iOS preview
       }
     },
     "production": {
       "android": {
-        "buildType": "app-bundle"
+        "buildType": "app-bundle",     // App Bundle for production (required for Google Play)
+        "distribution": "store"        // Submit to Google Play Store
+      },
+      "ios": {
+        "distribution": "store",       // Submit to App Store
+        "simulator": false             // Use real devices for production build (not simulator)
       }
     }
   }
