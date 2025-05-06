@@ -1,38 +1,13 @@
 name: Expo EAS CI/CD Pipeline
 
 on:
-  workflow_dispatch:
-    inputs:
-      run_qa_build:
-        description: '✅ Run QA Build?'
-        required: true
-        default: 'true'
-        type: boolean
-      approve_production_build:
-        description: '🛑 Approve Production Build (after QA)?'
-        required: true
-        default: 'false'
-        type: boolean
-      run_production_build:
-        description: '✅ Run Production Build?'
-        required: true
-        default: 'false'
-        type: boolean
-      approve_submission:
-        description: '🛑 Approve Submission to Store?'
-        required: true
-        default: 'false'
-        type: boolean
-      submit_to_play_store:
-        description: '✅ Submit to Google Play?'
-        required: true
-        default: 'false'
-        type: boolean
+  push:
+    branches:
+      - main  # You can change this to 'master' or any branch
 
 jobs:
   qa-build:
     runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.run_qa_build == 'true' }}
 
     steps:
       - name: Checkout code
@@ -66,7 +41,6 @@ jobs:
   production-build:
     runs-on: ubuntu-latest
     needs: qa-build
-    if: ${{ github.event.inputs.approve_production_build == 'true' && github.event.inputs.run_production_build == 'true' }}
 
     steps:
       - name: Checkout code
@@ -100,7 +74,6 @@ jobs:
   submit:
     runs-on: ubuntu-latest
     needs: production-build
-    if: ${{ github.event.inputs.approve_submission == 'true' && github.event.inputs.submit_to_play_store == 'true' }}
 
     steps:
       - name: Checkout code
@@ -125,12 +98,11 @@ jobs:
 
   dependabot:
     runs-on: ubuntu-latest
-    needs: [production-build, submit]
-    if: ${{ github.event.inputs.submit_to_play_store == 'true' }}
+    needs: submit
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Simulate Dependabot
-        run: echo "Dependabot triggered (manual automation entry point)."
+      - name: Notify or Update Dependencies
+        run: echo "Dependabot (or final job) ran successfully."
