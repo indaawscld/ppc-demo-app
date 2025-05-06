@@ -1,13 +1,22 @@
 {
+  "cli": {
+    "appVersionSource": "project"
+  },
   "build": {
     "preview": {
       "android": {
         "buildType": "apk"
+      },
+      "ios": {
+        "buildType": "simulator"
       }
     },
     "production": {
       "android": {
         "buildType": "app-bundle"
+      },
+      "ios": {
+        "buildType": "app-store"
       }
     }
   }
