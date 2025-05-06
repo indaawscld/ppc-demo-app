@@ -2,64 +2,89 @@ name: Build and Submit with Expo EAS
 
 on:
   push:
-    branches: [main]  # Trigger the workflow when code is pushed to the main branch (adjust as needed)
+    branches: [main]  # Trigger the workflow when code is pushed to the main branch
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout the latest code from the repository
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # Setup Node.js environment
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 18
 
+      # Clean npm cache to avoid corrupted installs
+      - name: Clean npm cache
+        run: npm cache clean --force
+
+      # Install all project dependencies
       - name: Install dependencies
         run: npm install
 
+      # Verify that expo-router is installed
+      - name: Verify expo-router installation
+        run: ls -la node_modules/expo-router || echo "expo-router not found!"
+
+      # Install EAS CLI globally to use EAS commands
       - name: Install EAS CLI
         run: npm install -g eas-cli
 
+      # Set Expo token from GitHub secrets to authenticate with EAS
       - name: Set Expo Token
         run: echo "EXPO_TOKEN=${{ secrets.EXPO_TOKEN }}" >> $GITHUB_ENV
 
-      # Build Android APK (Non-Prod)
+      # Build Android APK using EAS (non-production)
       - name: Build Android APK
         run: eas build --platform android --profile preview --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
-      # Build iOS IPA (Non-Prod)
+      # Build iOS IPA using EAS (non-production)
+      # iOS build may fail if Apple credentials are not set, so we allow it to continue on error
       - name: Build iOS IPA
         run: eas build --platform ios --profile preview --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        continue-on-error: true  # Continue even if iOS build fails (because it requires Apple credentials)
+        continue-on-error: true
 
   submit:
     runs-on: ubuntu-latest
-    needs: build  # Ensure this job runs after the build job completes successfully
+    needs: build  # Ensure this job runs after the build job
 
     steps:
+      # Checkout the latest code again for the submit job
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # Install dependencies (required if any submission script needs them)
+      - name: Install dependencies
+        run: npm install
+
+      # Verify expo-router exists again in case needed during submission
+      - name: Verify expo-router installation
+        run: ls -la node_modules/expo-router || echo "expo-router not found!"
+
+      # Install EAS CLI globally
       - name: Install EAS CLI
         run: npm install -g eas-cli
 
-      # Submit Android APK to Google Play
+      # Submit Android build to Google Play Store
       - name: Submit Android APK to Google Play
         run: |
           eas submit --platform android --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
-      # Submit iOS IPA to App Store (optional, will only work if Apple credentials are set)
+      # Submit iOS build to App Store
+      # Will work only if credentials are correctly set in Expo or EAS
       - name: Submit iOS IPA to App Store
-        if: always()  # Always attempt to submit iOS IPA, even if previous steps fail
+        if: always()
         run: |
           eas submit --platform ios --non-interactive
         env:
@@ -69,9 +94,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout code for Dependabot step
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # Run a script or placeholder for Dependabot (if needed in the future)
       - name: Run Dependabot (npm)
         uses: actions/github-script@v7
         with:

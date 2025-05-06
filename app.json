@@ -49,9 +49,7 @@
         "projectId": "e50d2dc8-1a90-4d08-82cf-d4ad15cc9238"
       }
     },
-    "owner": "indaawscld",
-    "cli": {
-      "appVersionSource": "project"
-    }
+    "owner": "indaawscld"
+    
   }
 }
