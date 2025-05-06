@@ -5,81 +5,54 @@ on:
     branches: [main]  # Trigger the workflow when code is pushed to the main branch (adjust as needed)
 
 jobs:
-  # Job for QA Build (Android and iOS Preview Builds)
-  qa-build:
+  build:
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout code
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 18
 
+      # Install dependencies
       - name: Install dependencies
         run: npm install
 
+      # Install EAS CLI
       - name: Install EAS CLI
         run: npm install -g eas-cli
 
+      # Set Expo Token for authentication with Expo servers
       - name: Set Expo Token
         run: echo "EXPO_TOKEN=${{ secrets.EXPO_TOKEN }}" >> $GITHUB_ENV
 
-      # Preview APK build (for internal testing)
+      # Build Android APK (Preview Build) for internal testing (using Preview profile)
       - name: Build Android APK (Preview)
         run: eas build --platform android --profile preview --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
-      # Preview IPA build (for iOS)
-      - name: Build iOS IPA (Preview)
-        run: eas build --platform ios --profile preview --non-interactive
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        continue-on-error: true  # Skip if iOS credentials are missing
-
-  # Job for Production Build (Android AAB for Play Store and iOS IPA for App Store)
-  production-build:
-    runs-on: ubuntu-latest
-    needs: qa-build  # Ensures production build runs after the QA build completes
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Install EAS CLI
-        run: npm install -g eas-cli
-
-      - name: Set Expo Token
-        run: echo "EXPO_TOKEN=${{ secrets.EXPO_TOKEN }}" >> $GITHUB_ENV
-
-      # Production Android AAB build (for Play Store)
+      # Build Android AAB (Production Build) for Google Play
       - name: Build Android AAB (Production)
         run: eas build --platform android --profile production --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
-      # Production iOS IPA build (for App Store)
-      - name: Build iOS IPA (Production)
-        run: eas build --platform ios --profile production --non-interactive
+      # Build iOS IPA (Preview Build) — using the "preview" profile
+      - name: Build iOS IPA (Preview)
+        run: eas build --platform ios --profile preview --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        continue-on-error: true  # Skip if iOS credentials are missing
+        continue-on-error: true  # Skip if credentials are not available for iOS
 
-  # Job for Submission (Submits the builds to the relevant stores)
   submit:
     runs-on: ubuntu-latest
-    needs: production-build  # Ensures submission happens after production build
+    needs: build  # Ensure this job runs after the build job completes
 
     steps:
       # Checkout the latest code again for the submit job
@@ -94,13 +67,13 @@ jobs:
       - name: Install EAS CLI
         run: npm install -g eas-cli
 
-      # Submit Android AAB to Google Play
+      # Submit Android AAB to Google Play (no need for --archive argument)
       - name: Submit Android AAB to Google Play
         run: eas submit --platform android --profile production --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
-      # Optional iOS submission
+      # Optional iOS submission — will only work if credentials are set
       - name: Submit iOS IPA to App Store
         if: always()
         run: eas submit --platform ios --profile production --non-interactive
@@ -109,7 +82,6 @@ jobs:
 
   dependabot:
     runs-on: ubuntu-latest
-    needs: [production-build, submit]  # Dependabot runs only after production build and submission
 
     steps:
       - name: Checkout code
