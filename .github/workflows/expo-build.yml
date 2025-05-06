@@ -1,11 +1,11 @@
-name: Build Android with Expo EAS
+name: Build and Submit with Expo EAS
 
 on:
   push:
     branches: [main]  # You can change this to any branch you want
 
 jobs:
-  build-android:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -15,7 +15,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 18  # Or match your project's Node version
+          node-version: 18
 
       - name: Install dependencies
         run: npm install
@@ -23,19 +23,19 @@ jobs:
       - name: Install EAS CLI
         run: npm install -g eas-cli
 
-      - name: Set Expo Token for authentication
+      - name: Set Expo Token
         run: echo "EXPO_TOKEN=${{ secrets.EXPO_TOKEN }}" >> $GITHUB_ENV
 
       - name: Build Android APK (Non-Prod)
         run: eas build --platform android --profile preview --non-interactive
         env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}  # Pass the token to the build process
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
       - name: Build iOS ADHOC IPA (Non-Prod)
         run: eas build --platform ios --profile preview --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-          
+
       - name: Upload Android APK Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -46,9 +46,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: expo-ios-ipa
-          path: '**/*.ipa
-          
-    submit:
+          path: '**/*.ipa'
+
+  submit:
     runs-on: ubuntu-latest
     needs: build
 
@@ -79,16 +79,16 @@ jobs:
           ls -al ./ios
 
       - name: Submit Android APK to Google Play
-        run: eas submit --platform android --path ./android/app.apk --non-interactive
+        run: eas submit --platform android --path ./android/your-app.apk --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
       - name: Submit iOS IPA to App Store
-        run: eas submit --platform ios --path ./ios/app.ipa --non-interactive
+        run: eas submit --platform ios --path ./ios/your-app.ipa --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-          
-    dependabot:
+
+  dependabot:
     runs-on: ubuntu-latest
 
     steps:
@@ -99,5 +99,4 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            console.log("Dependabot runs automatically via GitHub UI. No need to manually trigger.")
-
+            console.log("Dependabot runs automatically via GitHub UI. No manual trigger needed.")
