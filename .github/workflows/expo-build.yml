@@ -2,7 +2,7 @@ name: Build and Submit with Expo EAS
 
 on:
   push:
-    branches: [main]  # You can change this to any branch you want
+    branches: [main]
 
 jobs:
   build:
@@ -27,12 +27,17 @@ jobs:
         run: echo "EXPO_TOKEN=${{ secrets.EXPO_TOKEN }}" >> $GITHUB_ENV
 
       - name: Build Android APK (Non-Prod)
-        run: eas build --platform android --profile preview --non-interactive
+        id: android_build
+        run: |
+          eas build --platform android --profile preview --non-interactive --json > android-build.json
+          cat android-build.json
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
-      - name: Build iOS ADHOC IPA (Non-Prod)
-        run: eas build --platform ios --profile preview --non-interactive
+      - name: Download Android APK
+        run: |
+          APK_URL=$(cat android-build.json | jq -r '.artifacts.buildUrl')
+          curl -o app.apk "$APK_URL"
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
@@ -40,13 +45,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: expo-android-apk
-          path: '**/*.apk'
+          path: app.apk
 
-      - name: Upload iOS IPA Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: expo-ios-ipa
-          path: '**/*.ipa'
+      # OPTIONAL - skip iOS if you don’t have credentials
+      # Or keep iOS block if you add creds later
 
   submit:
     runs-on: ubuntu-latest
@@ -65,26 +67,11 @@ jobs:
           name: expo-android-apk
           path: ./android
 
-      - name: Download iOS IPA
-        uses: actions/download-artifact@v4
-        with:
-          name: expo-ios-ipa
-          path: ./ios
-
-      - name: List Downloaded Files (Debug)
-        run: |
-          echo "APK files:"
-          ls -al ./android
-          echo "IPA files:"
-          ls -al ./ios
+      - name: List APKs
+        run: ls -al ./android
 
       - name: Submit Android APK to Google Play
-        run: eas submit --platform android --path ./android/your-app.apk --non-interactive
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-
-      - name: Submit iOS IPA to App Store
-        run: eas submit --platform ios --path ./ios/your-app.ipa --non-interactive
+        run: eas submit --platform android --path ./android/app.apk --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
