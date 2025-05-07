@@ -13,11 +13,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Extract version numbers from app.json
+      - name: Extract version numbers
         run: |
-          # Extract the versionCode for Android and buildNumber for iOS from app.json
           echo "VERSION_ANDROID=$(jq -r '.expo.android.versionCode' app.json)" >> $GITHUB_ENV
           echo "VERSION_IOS=$(jq -r '.expo.ios.buildNumber' app.json)" >> $GITHUB_ENV
+          echo "Extracted Android Version: $(jq -r '.expo.android.versionCode' app.json)"
+          echo "Extracted iOS Version: $(jq -r '.expo.ios.buildNumber' app.json)"
+
 
       - name: Get completed issues/tickets
         run: |
