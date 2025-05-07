@@ -1,7 +1,8 @@
 name: Dependabot Notify
 
 on:
-  push:
+  pull_request:
+    types: [opened, synchronize, reopened]
     branches:
       - main
 
@@ -10,4 +11,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - run: echo "Dependabot (or final job) ran successfully."
+
+      - name: Get Dependabot Pull Request Details
+        run: |
+          PR_TITLE=$(jq -r .pull_request.title $GITHUB_EVENT_PATH)
+          PR_URL=$(jq -r .pull_request.html_url $GITHUB_EVENT_PATH)
+          echo "PR_TITLE=${PR_TITLE}" >> $GITHUB_ENV
+          echo "PR_URL=${PR_URL}" >> $GITHUB_ENV
+
+      - name: Notify via Slack
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+          --data "{\"text\": \" *Dependabot Update* \n\n*Pull Request Title:* ${PR_TITLE} \n*URL:* ${PR_URL}\n\nNew dependencies have been updated!\"}" \
+          ${{ secrets.SLACK_WEBHOOK_URL }}

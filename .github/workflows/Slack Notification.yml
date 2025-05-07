@@ -10,15 +10,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      - name: Extract version numbers
+      - name: Extract version numbers from app.json
         run: |
+          # Extract the versionCode for Android and buildNumber for iOS from app.json
           echo "VERSION_ANDROID=$(jq -r '.expo.android.versionCode' app.json)" >> $GITHUB_ENV
           echo "VERSION_IOS=$(jq -r '.expo.ios.buildNumber' app.json)" >> $GITHUB_ENV
 
       - name: Get completed issues/tickets
         run: |
+          # Use GitHub API to fetch closed issues/tickets for milestone 1
           curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
                -H "Accept: application/vnd.github.v3+json" \
                "https://api.github.com/repos/${{ github.repository }}/issues?state=closed&milestone=1" \
@@ -26,11 +29,13 @@ jobs:
 
       - name: Generate release notes
         run: |
+          # Generate release notes from closed issues
           NOTES=$(jq -r '.[] | "- \(.title) (\(.html_url))"' issues.json | tr '\n' '\n')
           echo "RELEASE_NOTES=$NOTES" >> $GITHUB_ENV
 
       - name: Send to Slack
         run: |
+          # Send the release notes to Slack with version numbers
           curl -X POST -H 'Content-type: application/json' \
           --data "{\"text\": \" *Release Notes* \n\n*Android:* ${VERSION_ANDROID}  \n*iOS:* ${VERSION_IOS}\n\n${RELEASE_NOTES}\n\n🚀 *Deployed Successfully!*\"}" \
           ${{ secrets.SLACK_WEBHOOK_URL }}
