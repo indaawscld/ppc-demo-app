@@ -11,9 +11,12 @@ jobs:
   notify:
     if: github.actor == 'dependabot[bot]' && github.event.pull_request.merged == true
     runs-on: ubuntu-latest
+
     steps:
       - name: Notify via Slack
         run: |
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          PR_URL="${{ github.event.pull_request.html_url }}"
           curl -X POST -H 'Content-type: application/json' \
-          --data '{"text": "A Dependabot PR was merged successfully into the main branch!"}' \
+          --data "{\"text\": \"A Dependabot PR was merged successfully into the main branch!\\n\\n*PR Title:* $PR_TITLE\\n*PR URL:* $PR_URL\"}" \
           ${{ secrets.SLACK_WEBHOOK_URL }}
