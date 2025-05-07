@@ -15,15 +15,13 @@ jobs:
 
       - name: Extract version numbers
         run: |
-          echo "VERSION_ANDROID=$(jq -r '.expo.android.versionCode' app.json)" >> $GITHUB_ENV
-          echo "VERSION_IOS=$(jq -r '.expo.ios.buildNumber' app.json)" >> $GITHUB_ENV
-          echo "Extracted Android Version: $(jq -r '.expo.android.versionCode' app.json)"
-          echo "Extracted iOS Version: $(jq -r '.expo.ios.buildNumber' app.json)"
-
+          VERSION_ANDROID=$(jq -r '.expo.android.versionCode // empty' app.json)
+          VERSION_IOS=$(jq -r '.expo.ios.buildNumber // empty' app.json)
+          echo "VERSION_ANDROID=$VERSION_ANDROID" >> $GITHUB_ENV
+          echo "VERSION_IOS=$VERSION_IOS" >> $GITHUB_ENV
 
       - name: Get completed issues/tickets
         run: |
-          # Use GitHub API to fetch closed issues/tickets for milestone 1
           curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
                -H "Accept: application/vnd.github.v3+json" \
                "https://api.github.com/repos/${{ github.repository }}/issues?state=closed&milestone=1" \
@@ -31,13 +29,16 @@ jobs:
 
       - name: Generate release notes
         run: |
-          # Generate release notes from closed issues
           NOTES=$(jq -r '.[] | "- \(.title) (\(.html_url))"' issues.json | tr '\n' '\n')
           echo "RELEASE_NOTES=$NOTES" >> $GITHUB_ENV
 
       - name: Send to Slack
         run: |
-          # Send the release notes to Slack with version numbers
+          echo "Sending message with Android: $VERSION_ANDROID, iOS: $VERSION_IOS"
           curl -X POST -H 'Content-type: application/json' \
-          --data "{\"text\": \" *Release Notes* \n\n*Android:* ${VERSION_ANDROID}  \n*iOS:* ${VERSION_IOS}\n\n${RELEASE_NOTES}\n\n🚀 *Deployed Successfully!*\"}" \
+          --data "{\"text\": \" *Release Notes* \n\n*Android:* $VERSION_ANDROID  \n*iOS:* $VERSION_IOS\n\n$RELEASE_NOTES\n\n🚀 *Deployed Successfully!*\"}" \
           ${{ secrets.SLACK_WEBHOOK_URL }}
+        env:
+          VERSION_ANDROID: ${{ env.VERSION_ANDROID }}
+          VERSION_IOS: ${{ env.VERSION_IOS }}
+          RELEASE_NOTES: ${{ env.RELEASE_NOTES }}

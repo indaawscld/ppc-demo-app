@@ -10,4 +10,4 @@ jobs:
     if: github.actor == 'dependabot[bot]' && github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
-      - run: echo "A Dependabot PR was merged successfully!"
+      - run: echo " A Dependabot PR was merged successfully!"
