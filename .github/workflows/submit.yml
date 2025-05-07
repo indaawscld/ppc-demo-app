@@ -1,0 +1,26 @@
+name: Deploy to Stores
+
+on:
+  workflow_run:
+    workflows: ["Production Build"]
+    types:
+      - completed
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: npm install
+      - run: npm install -g eas-cli
+
+      - name: Submit Android AAB to Google Play
+        run: eas submit --platform android --profile production --non-interactive --latest
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Submit iOS IPA to App Store
+        run: eas submit --platform ios --profile production --non-interactive --latest
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        continue-on-error: true

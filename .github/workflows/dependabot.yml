@@ -1,0 +1,14 @@
+name: Dependabot Notify
+
+on:
+  workflow_run:
+    workflows: ["Submit to Stores"]
+    types:
+      - completed
+
+jobs:
+  dependabot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: echo "Dependabot (or final job) ran successfully."
