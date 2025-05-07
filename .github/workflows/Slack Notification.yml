@@ -15,8 +15,8 @@ jobs:
 
       - name: Extract version numbers
         run: |
-          VERSION_ANDROID=$(jq -r '.expo.android.versionCode // empty' app.json)
-          VERSION_IOS=$(jq -r '.expo.ios.buildNumber // empty' app.json)
+          VERSION_ANDROID=$(jq -r '.expo.android.versionCode | tostring' app.json)
+          VERSION_IOS=$(jq -r '.expo.ios.buildNumber | tostring' app.json)
           echo "VERSION_ANDROID=$VERSION_ANDROID" >> $GITHUB_ENV
           echo "VERSION_IOS=$VERSION_IOS" >> $GITHUB_ENV
 

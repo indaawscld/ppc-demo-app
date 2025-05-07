@@ -14,7 +14,7 @@
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       },
-      "buildNumber": "1.0.0"  // Add buildNumber for iOS
+      "buildNumber": "1.0.0"
     },
     "android": {
       "package": "com.indaawscld.ppcdemoapp",
@@ -23,7 +23,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "versionCode": 1  // Add versionCode for Android
+      "versionCode": 1
     },
     "web": {
       "bundler": "metro",
