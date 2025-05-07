@@ -1,0 +1,44 @@
+name: Slack Release Notes
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  slack-notification:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Extract version numbers
+        run: |
+          VERSION_ANDROID=$(jq -r '.expo.android.versionCode | tostring' app.json)
+          VERSION_IOS=$(jq -r '.expo.ios.buildNumber | tostring' app.json)
+          echo "VERSION_ANDROID=$VERSION_ANDROID" >> $GITHUB_ENV
+          echo "VERSION_IOS=$VERSION_IOS" >> $GITHUB_ENV
+
+      - name: Get completed issues/tickets
+        run: |
+          curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+               -H "Accept: application/vnd.github.v3+json" \
+               "https://api.github.com/repos/${{ github.repository }}/issues?state=closed&milestone=1" \
+               -o issues.json
+
+      - name: Generate release notes
+        run: |
+          NOTES=$(jq -r '.[] | "- \(.title) (\(.html_url))"' issues.json | tr '\n' '\n')
+          echo "RELEASE_NOTES=$NOTES" >> $GITHUB_ENV
+
+      - name: Send to Slack
+        run: |
+          echo "Sending message with Android: $VERSION_ANDROID, iOS: $VERSION_IOS"
+          curl -X POST -H 'Content-type: application/json' \
+          --data "{\"text\": \" *Release Notes* \n\n*Android:* $VERSION_ANDROID  \n*iOS:* $VERSION_IOS\n\n$RELEASE_NOTES\n\n🚀 *Deployed Successfully!*\"}" \
+          ${{ secrets.SLACK_WEBHOOK_URL }}
+        env:
+          VERSION_ANDROID: ${{ env.VERSION_ANDROID }}
+          VERSION_IOS: ${{ env.VERSION_IOS }}
+          RELEASE_NOTES: ${{ env.RELEASE_NOTES }}
