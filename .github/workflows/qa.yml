@@ -1,4 +1,4 @@
-name: qa-build Android and iOS CI/CD Pipeline
+name: qa-build 
 
 on:
   push:
