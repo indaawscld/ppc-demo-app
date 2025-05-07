@@ -1,10 +1,9 @@
 name: Deploy to Stores
 
 on:
-  workflow_run:
-    workflows: ["Production Build"]
-    types:
-      - completed
+  push:
+    branches:
+      - main
 
 jobs:
   submit:

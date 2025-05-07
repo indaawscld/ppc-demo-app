@@ -1,11 +1,9 @@
 name: Production Build
 
 on:
-  workflow_run:
-    workflows: ["QA Build"]
-    types:
-      - completed
-
+  push:
+    branches:
+      - main
 jobs:
   production-build:
     runs-on: ubuntu-latest

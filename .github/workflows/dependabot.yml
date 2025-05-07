@@ -1,10 +1,9 @@
 name: Dependabot Notify
 
 on:
-  workflow_run:
-    workflows: ["Submit to Stores"]
-    types:
-      - completed
+  push:
+    branches:
+      - main
 
 jobs:
   dependabot:

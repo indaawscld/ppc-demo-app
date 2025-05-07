@@ -1,9 +1,9 @@
 name: Slack Release Notes
 
 on:
-  workflow_run:
-    workflows: ["Submit to Stores"]
-    types: [completed]
+  push:
+    branches:
+      - main
 
 jobs:
   slack-notification:
