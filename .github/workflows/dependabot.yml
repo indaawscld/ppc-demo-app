@@ -1,4 +1,4 @@
-name: Dependabot Notify
+name: Dependabot Notify on PR
 
 on:
   pull_request:
