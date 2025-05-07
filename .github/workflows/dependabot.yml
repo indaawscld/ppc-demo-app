@@ -1,13 +1,19 @@
 name: Dependabot Notify
 
 on:
-  push:
+  pull_request:
+    types:
+      - closed
     branches:
-      - main  # or specify another branch if you want
+      - main
 
 jobs:
   notify:
+    if: github.actor == 'dependabot[bot]' && github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
-      - name: Testing Push Event
-        run: echo "Push event triggered!"
+      - name: Notify via Slack
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+          --data '{"text": "A Dependabot PR was merged successfully into the main branch!"}' \
+          ${{ secrets.SLACK_WEBHOOK_URL }}
